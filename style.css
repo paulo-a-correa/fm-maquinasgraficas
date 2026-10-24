@@ -34,7 +34,7 @@
   --transition: 220ms ease;
 
   /* Velocidade do esmaecimento de cada seção ao entrar na tela */
-  --section-fade-duration: 2400ms;
+  --section-fade-duration: 2000ms;
 }
 
 html[data-theme="dark"] {
@@ -4056,5 +4056,24 @@ html[data-theme="dark"] .hero-proof .hero-proof-icon svg {
     width: 21px;
     height: 21px;
   }
+}
+
+/* =========================================================
+   CARD DA MÁQUINA — PREÇO E CONSULTA EM LINHAS SEPARADAS
+   ========================================================= */
+
+.machine-price {
+  display: block;
+  width: 100%;
+  margin-top: 16px;
+  color: var(--heading);
+  font-size: 1rem;
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.machine-price + .machine-link {
+  display: inline-flex;
+  margin-top: 10px;
 }
 
