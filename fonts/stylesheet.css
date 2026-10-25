@@ -1,0 +1,9 @@
+@font-face {
+    font-family: 'Segoe UI Variable';
+    src: url('SegoeUIVariable.woff2') format('woff2'),
+        url('SegoeUIVariable.woff') format('woff');
+    font-weight: normal;
+    font-style: normal;
+    font-display: swap;
+}
+

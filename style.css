@@ -4077,3 +4077,11 @@ html[data-theme="dark"] .hero-proof .hero-proof-icon svg {
   margin-top: 10px;
 }
 
+/* =========================================================
+   MODAL DA MÁQUINA — COMPARTILHAMENTO
+   ========================================================= */
+
+.machine-detail-share {
+  flex: 0 1 auto;
+}
+

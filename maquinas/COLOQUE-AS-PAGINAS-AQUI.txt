@@ -1,0 +1,1 @@
+Esta pasta sera preenchida automaticamente ao executar GERAR-PAGINAS-MAQUINAS.bat.

@@ -9,6 +9,15 @@ const FM_CATALOGO = {
 
 let fmMaquinasPublicas = [];
 
+const fmCatalogoBaseUrl = (() => {
+  const url = new URL(window.location.href);
+
+  url.searchParams.delete("maquina");
+  url.hash = "";
+
+  return url;
+})();
+
 function carregarCatalogoGoogleSheets() {
   const url = String(FM_CATALOGO.WEB_APP_URL || "").trim();
   if (!url || url.includes("COLE_AQUI")) return;
@@ -243,13 +252,13 @@ function renderizarMaquinasPublicas(maquinas) {
 
           ${price}
 
-          <button
-            type="button"
+          <a
+            href="${escapeCatalogo(urlCompartilhavelMaquina(machine).toString())}"
             class="machine-link machine-detail-trigger"
             data-machine-id="${escapeCatalogo(machine.id)}"
           >
             Consultar equipamento <span aria-hidden="true">↗</span>
-          </button>
+          </a>
         </div>
       </article>
     `;
@@ -315,19 +324,26 @@ function localizarMaquinaPorChave(chave) {
 }
 
 function urlCompartilhavelMaquina(machine) {
-  const url = new URL(window.location.href);
+  const slug = chaveCompartilhavelMaquina(machine);
 
-  /*
-    Remove fragmentos antigos e mantém outros parâmetros
-    que eventualmente existam no site.
-  */
-  url.hash = "";
-  url.searchParams.set(
-    "maquina",
-    chaveCompartilhavelMaquina(machine)
+  return new URL(
+    `maquinas/${encodeURIComponent(slug)}.html`,
+    fmCatalogoBaseUrl
   );
+}
 
-  return url;
+function chaveMaquinaNaUrlAtual() {
+  const params = new URLSearchParams(window.location.search);
+  const queryKey = params.get("maquina");
+
+  if (queryKey) {
+    return queryKey;
+  }
+
+  const match = decodeURIComponent(window.location.pathname)
+    .match(/\/maquinas\/([^/]+)\.html$/i);
+
+  return match ? match[1] : "";
 }
 
 function atualizarUrlDaMaquina(machine, mode = "push") {
@@ -348,16 +364,13 @@ function atualizarUrlDaMaquina(machine, mode = "push") {
 }
 
 function removerMaquinaDaUrl(mode = "replace") {
-  const url = new URL(window.location.href);
-
-  url.searchParams.delete("maquina");
-  url.hash = "";
-
   const state = {
     ...(history.state || {})
   };
 
   delete state.fmMachine;
+
+  const url = new URL(fmCatalogoBaseUrl.toString());
 
   if (mode === "push") {
     history.pushState(state, "", url);
@@ -367,8 +380,7 @@ function removerMaquinaDaUrl(mode = "replace") {
 }
 
 function abrirFichaCompartilhadaDaUrl() {
-  const params = new URLSearchParams(window.location.search);
-  const chave = params.get("maquina");
+  const chave = chaveMaquinaNaUrlAtual();
 
   if (!chave) return;
 
@@ -386,10 +398,25 @@ function abrirFichaCompartilhadaDaUrl() {
 }
 
 function ligarBotoesDetalhes() {
-  document.querySelectorAll(".machine-detail-trigger").forEach((button) => {
-    button.addEventListener("click", () => {
+  document.querySelectorAll(".machine-detail-trigger").forEach((link) => {
+    link.addEventListener("click", (event) => {
+      /*
+        Ctrl/Cmd/Shift/Alt preservam o comportamento normal do link:
+        abrir a página HTML real em nova aba, copiar link etc.
+      */
+      if (
+        event.ctrlKey ||
+        event.metaKey ||
+        event.shiftKey ||
+        event.altKey
+      ) {
+        return;
+      }
+
+      event.preventDefault();
+
       abrirFichaMaquina(
-        button.dataset.machineId,
+        link.dataset.machineId,
         {
           atualizarUrl: true
         }
@@ -446,6 +473,50 @@ function abrirFichaMaquina(machineId, options = {}) {
       window.location.href = `https://wa.me/?text=${encodeURIComponent(message)}`;
     }
   };
+
+  const shareButton = document.getElementById("machineDetailShare");
+
+  if (shareButton) {
+    shareButton.onclick = async () => {
+      const url = urlCompartilhavelMaquina(machine).toString();
+
+      try {
+        if (navigator.share) {
+          await navigator.share({
+            title: machine.titulo || "Equipamento",
+            text:
+              machine.descricaoCurta ||
+              "Confira este equipamento da Felipe Mariano Máquinas Gráficas.",
+            url
+          });
+
+          return;
+        }
+
+        if (navigator.clipboard && window.isSecureContext) {
+          await navigator.clipboard.writeText(url);
+
+          const original = shareButton.innerHTML;
+
+          shareButton.innerHTML =
+            'Link copiado <span aria-hidden="true">✓</span>';
+
+          window.setTimeout(() => {
+            shareButton.innerHTML = original;
+          }, 1800);
+
+          return;
+        }
+
+        window.prompt("Copie o link deste equipamento:", url);
+      } catch (error) {
+        if (error && error.name === "AbortError") return;
+
+        console.error("Compartilhamento:", error);
+        window.prompt("Copie o link deste equipamento:", url);
+      }
+    };
+  }
 
   modal.classList.add("is-open");
   modal.setAttribute("aria-hidden", "false");
@@ -643,8 +714,7 @@ function fecharFichaMaquina(options = {}) {
 }
 
 window.addEventListener("popstate", () => {
-  const params = new URLSearchParams(window.location.search);
-  const chave = params.get("maquina");
+  const chave = chaveMaquinaNaUrlAtual();
 
   if (!chave) {
     fecharFichaMaquina({

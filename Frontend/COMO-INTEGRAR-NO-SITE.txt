@@ -1,0 +1,23 @@
+1. Copie catalogo-google-sheets.js para a pasta do seu site.
+
+2. No seu script.js atual, troque:
+
+const machineCards = [...document.querySelectorAll(".machine-card")];
+
+por:
+
+let machineCards = [...document.querySelectorAll(".machine-card")];
+
+3. No index.html, depois de:
+
+<script src="script.js"></script>
+
+adicione:
+
+<script src="catalogo-google-sheets.js"></script>
+
+4. Em catalogo-google-sheets.js, cole a URL /exec do Apps Script em:
+
+WEB_APP_URL: "..."
+
+Enquanto a URL não estiver preenchida, os cards atuais continuam aparecendo como fallback.
